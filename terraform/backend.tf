@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "sheck-bucket"
+    bucket = "aws-lagos231214"
     region = "eu-north-1"
     key    = "terraform-jenkins/terraform.tfstate"
   }

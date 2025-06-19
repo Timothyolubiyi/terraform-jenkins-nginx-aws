@@ -15,7 +15,7 @@ pipeline {
         stage('Checkout SCM'){
             steps{
                 script{
-                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Seun07/terraform-jenkins-aws.git']])
+                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Timothyolubiyi/terraform-jenkins-aws.git']])
                 }
             }
         }
