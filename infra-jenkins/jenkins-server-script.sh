@@ -1,29 +1,48 @@
 #!/bin/bash
 
-#another method of installing jenkins
+# This script sets up a Jenkins server in a Docker container on an Ubuntu system.
+set -e
 
+echo "===== Updating System ====="
 sudo apt update -y
+sudo apt upgrade -y
 
-sudo apt upgrade -y 
+echo "===== Installing Docker ====="
+sudo apt install -y docker.io
 
-sudo apt install openjdk-17-jre -y
+echo "===== Starting Docker ====="
+sudo systemctl enable docker
+sudo systemctl start docker
 
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
-  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-  /etc/apt/sources.list.d/jenkins.list > /dev/null
-sudo apt-get update -y 
-sudo apt-get install jenkins -y
-jenkins --version
+echo "===== Verifying Docker ====="
+sudo docker --version
 
-# install git
-sudo apt install git -y
+echo "===== Creating Jenkins Volume ====="
+sudo docker volume create jenkins_home
 
-# install terraform
+echo "===== Removing Existing Jenkins Container (if any) ====="
+sudo docker rm -f jenkins 2>/dev/null || true
 
-sudo apt install -y apt-utils
-sudo apt-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-sudo apt -y install terraform
+echo "===== Running Jenkins Container ====="
+sudo docker run -d \
+  --name jenkins \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  jenkins/jenkins:lts-jdk21
 
-terraform --version
+echo "===== Waiting for Jenkins to Start ====="
+sleep 60
+
+echo "===== Jenkins Container Status ====="
+sudo docker ps
+
+echo "===== Jenkins Initial Admin Password ====="
+sudo docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+echo ""
+echo "===== Jenkins Installation Complete ====="
+echo "Access Jenkins at:"
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+echo "http://$PUBLIC_IP:8080"
